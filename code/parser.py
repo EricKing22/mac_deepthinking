@@ -26,6 +26,12 @@ def parse_answer(answer_token):
 
     return reverse_answer_dict[answer_token]
 
+def get_answer_dict():
+    with open("../data/dic.pkl", "rb") as f:
+        dictionaries = pickle.load(f)
+        answer_dict = dictionaries["answer_dic"]
+
+    return answer_dict
 
 if __name__ == "__main__":
     with open("../data/train.pkl", "rb") as f:
