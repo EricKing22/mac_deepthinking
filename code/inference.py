@@ -73,22 +73,18 @@ def preprocess_image(image_file):
     resnet = Resnet().to('cuda').eval()
     return resnet(image)
 
-if __name__ == "__main__":
-    args = parse_args()
 
-    image = preprocess_image(args.image_file).to('cuda')
-    question = preprocess_question(args.question).unsqueeze(0).to('cuda')
-    question_length = torch.tensor(len(question[0])).unsqueeze(0).to('cuda')
-
+def inference(image_path, question, device):
+    image = preprocess_image(image_path).to(device)
+    question = preprocess_question(question).unsqueeze(0).to(device)
+    question_length = torch.tensor(len(question[0])).unsqueeze(0).to(device)
 
     cfg_from_file(args.cfg_file)
     cfg.DATA_DIR = args.data_dir
 
-
-
     vocab = load_vocab(cfg)
     model, model_ema = mac.load_MAC(cfg, vocab)
-    checkpoint = torch.load(os.path.join(os.pardir, "log", "model(2.1).pth"),weights_only=True)
+    checkpoint = torch.load(os.path.join(os.pardir, "log", "model(2.1).pth"), weights_only=True)
     model.load_state_dict(checkpoint["model"])
     model.eval()
 
@@ -97,7 +93,20 @@ if __name__ == "__main__":
         result = prediction.argmax(1).item()
 
     answer_dict = get_answer_dict()
-    predicts = {k:v for (k,v) in zip(answer_dict.keys(), prediction.squeeze(0).tolist())}
+    predicts = {k: v for (k, v) in zip(answer_dict.keys(), prediction.squeeze(0).tolist())}
     print(predicts)
     print(parse_answer(result))
+
+
+if __name__ == "__main__":
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    args = parse_args()
+
+    image_path = args.image_file
+    question = args.question
+
+    inference(image_path, question, device)
+
+
+
 
