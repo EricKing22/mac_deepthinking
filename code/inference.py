@@ -94,8 +94,10 @@ def inference(image_path, question, device):
 
     answer_dict = get_answer_dict()
     predicts = {k: v for (k, v) in zip(answer_dict.keys(), prediction.squeeze(0).tolist())}
-    print(predicts)
-    print(parse_answer(result))
+    answer = parse_answer(result)
+    # print(predicts)
+
+    return answer
 
 
 if __name__ == "__main__":
@@ -105,7 +107,10 @@ if __name__ == "__main__":
     image_path = args.image_file
     question = args.question
 
-    inference(image_path, question, device)
+    answer = inference(image_path, question, device)
+
+    print("Question: ", question)
+    print("Answer: ", answer)
 
 
 
