@@ -32,7 +32,7 @@ class ControlUnit(nn.Module):
         super().__init__()
         self.cfg = cfg
         self.attn = nn.Linear(module_dim, 1)
-        self.control_input = nn.Sequential(nn.Linear(module_dim, module_dim),
+        self.control_input = nn.Sequential(nn.Linear(module_dim*2, module_dim),
                                            nn.Tanh())
 
         self.control_input_u = nn.ModuleList()
@@ -46,10 +46,10 @@ class ControlUnit(nn.Module):
         mask = torch.arange(max_len, device=device).expand(len(question_lengths), int(max_len)) < question_lengths.unsqueeze(1)
         mask = mask.float()
         ones = torch.ones_like(mask)
-        mask = (ones - mask) * (1e-30)
+        mask = (ones - mask) * (-1e30)
         return mask
 
-    def forward(self, question, context, question_lengths, step):
+    def forward(self, question, context, control, question_lengths, step):
         """
         Args:
             question: external inputs to control unit (the question vector).
@@ -62,8 +62,9 @@ class ControlUnit(nn.Module):
             step: which step in the reasoning chain
         """
         # compute interactions with question words
+        question = torch.concat([control,question], -1)
         question = self.control_input(question)
-        question = self.control_input_u[step](question)
+        # question = self.control_input_u[step](question)
 
         newContControl = question
         newContControl = torch.unsqueeze(newContControl, 1)
@@ -194,7 +195,7 @@ class MACUnit(nn.Module):
         for i in range(self.max_step):
             # control unit forward
             # TODO: control unit dependent on step index i, should be removed
-            control = self.control(question, context, question_lengths, i)
+            control = self.control(question, context, control, question_lengths, i)
             # read unit forward
             info = self.read(memory, knowledge, control, memDpMask)
             # write unit forward
@@ -241,6 +242,7 @@ class InputUnit(nn.Module):
         # Since sentences usually have different lengths, they are padded to have uniform length.
         # This results in a tensor of shape (batch_size, max_seq_length, embedding_dim), where some rows (at the end of shorter sentences) are just padding.
         # Return a PackedSequence object
+        question_len = question_len.to("cpu")
         embed = nn.utils.rnn.pack_padded_sequence(embed, question_len, batch_first=True)
 
         # contextual_words = sequence of hidden states for each word in the sentence

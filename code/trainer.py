@@ -219,7 +219,7 @@ class Trainer():
         self.save_models(self.max_epochs)
         self.writer.close()
         print("Finished Training")
-        print("Highest validation accuracy: {} at epoch {}")
+        print("Highest validation accuracy: {} at epoch {}".format(self.previous_best_acc, self.previous_best_epoch))
 
     def log_results(self, epoch, dict, max_eval_samples=None):
         epoch += 1
@@ -275,7 +275,7 @@ class Trainer():
             question = question.to(self.device)
             answer = answer.squeeze().to(self.device)
 
-            question_len = torch.tensor(question_len).to(self.device)
+            question_len = torch.tensor(question_len)
 
             with torch.no_grad():
                 scores = self.model(image, question, question_len)
