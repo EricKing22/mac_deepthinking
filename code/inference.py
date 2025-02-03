@@ -77,7 +77,7 @@ def preprocess_image(image_file):
 def inference(image_path, question, device):
     image = preprocess_image(image_path).to(device)
     question = preprocess_question(question).unsqueeze(0).to(device)
-    question_length = torch.tensor(len(question[0])).unsqueeze(0).to(device)
+    question_length = torch.tensor(len(question[0])).unsqueeze(0).to("cpu")
 
     cfg_from_file(args.cfg_file)
     cfg.DATA_DIR = args.data_dir

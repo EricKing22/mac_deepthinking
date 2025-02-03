@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init as init
 from torch.autograd import Variable
+from torch.cuda import device
 
 from utils import *
 
@@ -192,6 +193,7 @@ class MACUnit(nn.Module):
 
         for i in range(self.max_step):
             # control unit forward
+            # TODO: control unit dependent on step index i, should be removed
             control = self.control(question, context, question_lengths, i)
             # read unit forward
             info = self.read(memory, knowledge, control, memDpMask)
@@ -236,9 +238,13 @@ class InputUnit(nn.Module):
         embed = self.encoder_embed(question)
         embed = self.embedding_dropout(embed)
 
-        question_len = question_len.to('cpu')
+        # Since sentences usually have different lengths, they are padded to have uniform length.
+        # This results in a tensor of shape (batch_size, max_seq_length, embedding_dim), where some rows (at the end of shorter sentences) are just padding.
+        # Return a PackedSequence object
         embed = nn.utils.rnn.pack_padded_sequence(embed, question_len, batch_first=True)
 
+        # contextual_words = sequence of hidden states for each word in the sentence
+        # question_embedding = hidden state of the last word in the sentence
         contextual_words, (question_embedding, _) = self.encoder(embed)
         if self.bidirectional:
             question_embedding = torch.cat([question_embedding[0], question_embedding[1]], -1)

@@ -164,7 +164,7 @@ class Trainer():
             answer = answer.squeeze().to(self.device)
 
 
-            question_len = torch.tensor(question_len).to(self.device)
+            question_len = torch.tensor(question_len).to("cpu")
 
             ############################
             # (2) Train Model

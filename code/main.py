@@ -32,8 +32,13 @@ def set_traindir():
     logdir = os.path.join(os.pardir,"log")
     mkdir_p(logdir)
 
-    num = len(os.listdir(logdir))
-    traindir = os.path.join(logdir, f"train_{num+1}")
+    num = 1
+    traindir = os.path.join(logdir, f"train_{num}")
+
+    while os.path.exists(traindir):
+        num += 1
+        traindir = os.path.join(logdir, f"train_{num}")
+
     print("Saving output to: {}".format(traindir))
 
     return traindir
