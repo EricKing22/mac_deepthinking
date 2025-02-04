@@ -35,9 +35,9 @@ class ControlUnit(nn.Module):
         self.control_input = nn.Sequential(nn.Linear(module_dim*2, module_dim),
                                            nn.Tanh())
 
-        self.control_input_u = nn.ModuleList()
-        for i in range(max_step):
-            self.control_input_u.append(nn.Linear(module_dim, module_dim))
+        # self.control_input_u = nn.ModuleList()
+        # for i in range(max_step):
+        #     self.control_input_u.append(nn.Linear(module_dim, module_dim))
 
         self.module_dim = module_dim
 
