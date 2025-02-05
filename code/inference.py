@@ -40,6 +40,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', dest='cfg_file', help='optional config file', default='..\\cfg\\clevr_train_mac.yml', type=str)
     parser.add_argument('--data_dir', dest='data_dir', type=str, default='D:\\University\\Project\\CLEVR_v1.0')
+    parser.add_argument('--model_path', dest='model_path', type=str, default='..\\log\\model(2.6).pth')
     parser.add_argument('--image_file', type=str, help='image file path', default='D:\\University\\Project\\CLEVR_v1.0\\images\\val\\CLEVR_val_000012.png')
     parser.add_argument('--question', type=str, help='question string', default='What is the color of the cube?')
     args = parser.parse_args()
@@ -84,7 +85,7 @@ def inference(image_path, question, device):
 
     vocab = load_vocab(cfg)
     model, model_ema = mac.load_MAC(cfg, vocab)
-    checkpoint = torch.load(os.path.join(os.pardir, "log", "model(2.1).pth"), weights_only=True)
+    checkpoint = torch.load(args.model_path, weights_only=True)
     model.load_state_dict(checkpoint["model"])
     model.eval()
 
