@@ -12,7 +12,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', dest='cfg_file', help='optional config file', default='..\\cfg\\clevr_train_mac.yml', type=str)
     parser.add_argument('--gpu',  dest='gpu', type=str, default='0')
-    parser.add_argument('--model_path', dest='model_path', type=str, default='..\\log\\model(2.6).pth')
+    parser.add_argument('--model_path', dest='model_path', type=str, default='..\\log\\model_recall_step_specific.pth')
     parser.add_argument('--manualSeed', type=int, help='manual seed')
     args = parser.parse_args()
     return args
@@ -20,12 +20,14 @@ def parse_args():
 
 def validate(model_path, device):
     val_dataset = ClevrDataset(cfg.DATASET.DATA_DIR, 'val')
-    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=8, shuffle=False, drop_last=True, num_workers=cfg.WORKERS, collate_fn=collate_fn)
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, drop_last=True, num_workers=cfg.WORKERS, collate_fn=collate_fn)
 
 
     vocab = load_vocab(cfg)
     model,model_ema = mac.load_MAC(cfg, vocab)
     checkpoint = torch.load(model_path,weights_only=True)
+    print(f"Using max steps: {checkpoint['max_step']}")
+    print(f"Using inference iteration: {cfg.TRAIN.MAX_STEPS}")
     model.load_state_dict(checkpoint["model"])
     model.eval()
     all_accuracies = []

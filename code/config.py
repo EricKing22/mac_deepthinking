@@ -27,12 +27,15 @@ __C.TRAIN.MAX_STEPS = 4
 __C.TRAIN.EALRY_STOPPING = True
 __C.TRAIN.PATIENCE = 5
 __C.TRAIN.VAR_DROPOUT = False
+__C.TRAIN.STEP_SPECIFIC = False
 __C.TRAIN = dict(__C.TRAIN)
 
 # Dataset options
 __C.DATASET = edict()
 __C.DATASET.DATA_DIR = ''
 __C.DATASET = dict(__C.DATASET)
+
+
 
 
 def _merge_a_into_b(a, b):

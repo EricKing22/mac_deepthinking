@@ -139,9 +139,9 @@ class Trainer():
         self.prior_epoch_loss = epoch_loss
         self.total_epoch_loss = 0
 
-    def save_models(self, iteration):
-        save_model(self.model, self.optimizer, iteration, self.model_dir, model_name="model")
-        save_model(self.model_ema, None, iteration, self.model_dir, model_name="model_ema")
+    def save_models(self, iteration, cfg):
+        save_model(self.model, self.optimizer, iteration, self.model_dir, model_name="model",cfg=cfg)
+        save_model(self.model_ema, None, iteration, self.model_dir, model_name="model_ema",cfg=cfg)
 
     def train_epoch(self, epoch):
         cfg = self.cfg
@@ -216,7 +216,7 @@ class Trainer():
                 if epoch - cfg.TRAIN.PATIENCE == self.previous_best_epoch:
                     break
 
-        self.save_models(self.max_epochs)
+        self.save_models(self.max_epochs, cfg)
         self.writer.close()
         print("Finished Training")
         print("Highest validation accuracy: {} at epoch {}".format(self.previous_best_acc, self.previous_best_epoch))
@@ -238,7 +238,7 @@ class Trainer():
             self.previous_best_epoch = epoch
 
         if epoch % self.snapshot_interval == 0:
-            self.save_models(epoch)
+            self.save_models(epoch, self.cfg)
 
     def calc_accuracy(self, mode="validation", max_samples=None):
         self.set_mode("validation")

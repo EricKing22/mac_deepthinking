@@ -9,7 +9,8 @@ from utils import *
 
 def load_MAC(cfg, vocab):
     kwargs = {'vocab': vocab,
-              'max_step': cfg.TRAIN.MAX_STEPS
+              'max_step': cfg.TRAIN.MAX_STEPS,
+              'step_specific': cfg.TRAIN.STEP_SPECIFIC
               }
 
     model = MACNetwork(cfg, **kwargs)
@@ -28,16 +29,16 @@ def load_MAC(cfg, vocab):
 
 
 class ControlUnit(nn.Module):
-    def __init__(self, cfg, module_dim, max_step=4):
+    def __init__(self, cfg, module_dim, max_step=4, step_specific=False):
         super().__init__()
         self.cfg = cfg
         self.attn = nn.Linear(module_dim, 1)
         self.control_input = nn.Sequential(nn.Linear(module_dim*2, module_dim),
                                            nn.Tanh())
-
-        # self.control_input_u = nn.ModuleList()
-        # for i in range(max_step):
-        #     self.control_input_u.append(nn.Linear(module_dim, module_dim))
+        if step_specific:
+            self.control_input_u = nn.ModuleList()
+            for i in range(max_step):
+                self.control_input_u.append(nn.Linear(module_dim, module_dim))
 
         self.module_dim = module_dim
 
@@ -64,7 +65,8 @@ class ControlUnit(nn.Module):
         # compute interactions with question words
         question = torch.concat([control,question], -1)
         question = self.control_input(question)
-        # question = self.control_input_u[step](question)
+        if cfg.TRAIN.STEP_SPECIFIC:
+            question = self.control_input_u[step](question)
 
         newContControl = question
         newContControl = torch.unsqueeze(newContControl, 1)
@@ -77,6 +79,11 @@ class ControlUnit(nn.Module):
         # question_lengths = torch.cuda.FloatTensor(question_lengths)
         # mask = self.mask(question_lengths, logits.device).unsqueeze(-1)
         # logits += mask
+
+        # The self.attn layer is a linear layer with an output size of 1,
+        # but it is applied to each element in the interactions tensor,
+        # which has a shape of [batchSize, questionLength, ctrlDim].
+        # Therefore, the logits tensor will have a shape of [batchSize, questionLength, 1].
         attn = F.softmax(logits, 1)
 
         # apply soft attention to current context words
@@ -165,10 +172,10 @@ class WriteUnit(nn.Module):
 
 
 class MACUnit(nn.Module):
-    def __init__(self, cfg, module_dim=512, max_step=4):
+    def __init__(self, cfg, module_dim=512, max_step=4,step_specific=False):
         super().__init__()
         self.cfg = cfg
-        self.control = ControlUnit(cfg, module_dim, max_step)
+        self.control = ControlUnit(cfg, module_dim, max_step,step_specific)
         self.read = ReadUnit(module_dim)
         self.write = WriteUnit(cfg, module_dim)
 
@@ -279,7 +286,7 @@ class OutputUnit(nn.Module):
 
 
 class MACNetwork(nn.Module):
-    def __init__(self, cfg, max_step, vocab):
+    def __init__(self, cfg, max_step, vocab, step_specific):
         super().__init__()
 
         self.cfg = cfg
@@ -289,7 +296,7 @@ class MACNetwork(nn.Module):
 
         self.output_unit = OutputUnit()
 
-        self.mac = MACUnit(cfg, max_step=max_step)
+        self.mac = MACUnit(cfg, max_step=max_step, step_specific=step_specific)
 
         init_modules(self.modules(), w_init=self.cfg.TRAIN.WEIGHT_INIT)
         nn.init.uniform_(self.input_unit.encoder_embed.weight, -1.0, 1.0)

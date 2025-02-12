@@ -24,6 +24,7 @@ def parse_args():
     parser.add_argument('--gpu',  dest='gpu', type=str)
     parser.add_argument('--data_dir', dest='data_dir', type=str, default='D:\\University\\Project\\CLEVR_v1.0')
     parser.add_argument('--manualSeed', type=int, help='manual seed')
+    parser.add_argument('--num_workers', type=int, help='number of workers', default=8)
     args = parser.parse_args()
     return args
 
@@ -54,6 +55,8 @@ if __name__ == "__main__":
         cfg.DATA_DIR = args.data_dir
     if args.manualSeed is None:
         args.manualSeed = random.randint(1, 10000)
+    if args.num_workers is not None:
+        cfg.WORKERS = args.num_workers
     random.seed(args.manualSeed)
     os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU_ID
     torch.manual_seed(args.manualSeed)

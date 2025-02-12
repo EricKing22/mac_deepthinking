@@ -15,11 +15,13 @@ from torch.nn import functional as F
 import torchvision.utils as vutils
 
 
-def save_model(model, optim, iter, model_dir, max_to_keep=None, model_name=""):
+def save_model(model, optim, iter, model_dir, max_to_keep=None, model_name="", cfg=None):
     checkpoint = {
         'iter': iter,
         'model': model.state_dict(),
-        'optim': optim.state_dict() if optim is not None else None}
+        'optim': optim.state_dict() if optim is not None else None,
+        'max_steps': cfg.TRAIN.MAX_STEPS
+    }
     if model_name == "":
         torch.save(checkpoint, "{}/checkpoint_{:06}.pth".format(model_dir, iter))
     else:

@@ -40,9 +40,9 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', dest='cfg_file', help='optional config file', default='..\\cfg\\clevr_train_mac.yml', type=str)
     parser.add_argument('--data_dir', dest='data_dir', type=str, default='D:\\University\\Project\\CLEVR_v1.0')
-    parser.add_argument('--model_path', dest='model_path', type=str, default='..\\log\\model(2.6).pth')
-    parser.add_argument('--image_file', type=str, help='image file path', default='D:\\University\\Project\\CLEVR_v1.0\\images\\val\\CLEVR_val_000012.png')
-    parser.add_argument('--question', type=str, help='question string', default='What is the color of the cube?')
+    parser.add_argument('--model_path', dest='model_path', type=str, default='..\\log\\model_recall_step_specific.pth')
+    parser.add_argument('--image_file', type=str, help='image file path', default='D:\\University\\Project\\CLEVR_v1.0\\images\\val\\CLEVR_val_000000.png')
+    parser.add_argument('--question', type=str, help='question string', default='What is the material of the big purple object?')
     args = parser.parse_args()
     return args
 
@@ -86,6 +86,7 @@ def inference(image_path, question, device):
     vocab = load_vocab(cfg)
     model, model_ema = mac.load_MAC(cfg, vocab)
     checkpoint = torch.load(args.model_path, weights_only=True)
+    print(f"Using inference iteration: {cfg.TRAIN.MAX_STEPS}")
     model.load_state_dict(checkpoint["model"])
     model.eval()
 
@@ -93,10 +94,12 @@ def inference(image_path, question, device):
         prediction = model(image, question, question_length)
         result = prediction.argmax(1).item()
 
-    answer_dict = get_answer_dict()
-    predicts = {k: v for (k, v) in zip(answer_dict.keys(), prediction.squeeze(0).tolist())}
+
+
     answer = parse_answer(result)
-    # print(predicts)
+
+    predicts = {k:v for (v,k) in zip(prediction.cpu().squeeze().tolist(), get_answer_dict())}
+    print(predicts)
 
     return answer
 

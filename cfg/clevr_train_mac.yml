@@ -12,7 +12,8 @@ TRAIN:
     EALRY_STOPPING: True
     PATIENCE: 5
     CLIP_GRADS: True
-    MAX_STEPS: 20
+    MAX_STEPS: 4
+    STEP_SPECIFIC: False
 
 DATASET:
     DATA_DIR: '../data'
