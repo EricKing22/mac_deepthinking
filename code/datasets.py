@@ -26,10 +26,17 @@ from config import cfg
 
 class ClevrDataset(Dataset):
     # this dataset assumes h5 feature file and pickle question file stores img information in the same order
-    def __init__(self, data_dir, split='train'):
+    def __init__(self, data_dir, set, split='train'):
+        if set == 'human':
+            with open(os.path.join(data_dir, '{}.pkl'.format(split + "_human")), 'rb') as f:
+                self.data = pickle.load(f)
+        elif set == 'hard':
+            with open(os.path.join(data_dir, '{}.pkl'.format(split + "_hard")), 'rb') as f:
+                self.data = pickle.load(f)
+        else:
+            with open(os.path.join(data_dir, '{}.pkl'.format(split)), 'rb') as f:
+                self.data = pickle.load(f)
 
-        with open(os.path.join(data_dir, '{}.pkl'.format(split)), 'rb') as f:
-            self.data = pickle.load(f)
 
         self.imgs_path = os.path.join(data_dir, '{}.h5'.format(split))
 

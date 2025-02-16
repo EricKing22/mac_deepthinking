@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.init as init
 from torch.autograd import Variable
 from torch.cuda import device
+from torch.nn.utils import spectral_norm
 
 from utils import *
 
@@ -42,6 +43,7 @@ class ControlUnit(nn.Module):
 
         self.module_dim = module_dim
 
+    # drop out
     def mask(self, question_lengths, device):
         max_len = question_lengths.max().item()
         mask = torch.arange(max_len, device=device).expand(len(question_lengths), int(max_len)) < question_lengths.unsqueeze(1)
@@ -75,13 +77,13 @@ class ControlUnit(nn.Module):
         # compute attention distribution over words and summarize them accordingly
         logits = self.attn(interactions)
 
-        # TODO: add mask again?!
+        # mask logits  before computing attention
         # question_lengths = torch.cuda.FloatTensor(question_lengths)
         # mask = self.mask(question_lengths, logits.device).unsqueeze(-1)
         # logits += mask
 
         # The self.attn layer is a linear layer with an output size of 1,
-        # but it is applied to each element in the interactions tensor,
+        # but it is applied to each element(row) in the interactions tensor,
         # which has a shape of [batchSize, questionLength, ctrlDim].
         # Therefore, the logits tensor will have a shape of [batchSize, questionLength, 1].
         attn = F.softmax(logits, 1)
@@ -201,7 +203,6 @@ class MACUnit(nn.Module):
 
         for i in range(self.max_step):
             # control unit forward
-            # TODO: control unit dependent on step index i, should be removed
             control = self.control(question, context, control, question_lengths, i)
             # read unit forward
             info = self.read(memory, knowledge, control, memDpMask)

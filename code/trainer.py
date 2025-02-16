@@ -69,11 +69,11 @@ class Trainer():
         cudnn.benchmark = True
 
         # load dataset
-        self.dataset = ClevrDataset(data_dir=self.data_dir, split="train")
+        self.dataset = ClevrDataset(data_dir=self.data_dir, set="org", split="train")
         self.dataloader = DataLoader(dataset=self.dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True,
                                        num_workers=cfg.WORKERS, drop_last=True, collate_fn=collate_fn)
 
-        self.dataset_val = ClevrDataset(data_dir=self.data_dir, split="val")
+        self.dataset_val = ClevrDataset(data_dir=self.data_dir, set="org", split="val")
         self.dataloader_val = DataLoader(dataset=self.dataset_val, batch_size=200, drop_last=True,
                                          shuffle=False, num_workers=cfg.WORKERS, collate_fn=collate_fn)
 
