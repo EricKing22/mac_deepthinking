@@ -74,7 +74,7 @@ class Trainer():
                                        num_workers=cfg.WORKERS, drop_last=True, collate_fn=collate_fn)
 
         self.dataset_val = ClevrDataset(data_dir=self.data_dir, set="org", split="val")
-        self.dataloader_val = DataLoader(dataset=self.dataset_val, batch_size=200, drop_last=True,
+        self.dataloader_val = DataLoader(dataset=self.dataset_val, batch_size=cfg.TRAIN.BATCH_SIZE, drop_last=True,
                                          shuffle=False, num_workers=cfg.WORKERS, collate_fn=collate_fn)
 
         # load model
@@ -250,25 +250,10 @@ class Trainer():
             eval_data = iter(self.dataloader_val)
             num_imgs = len(self.dataset_val)
 
-        batch_size = 200
-        total_iters = num_imgs // batch_size
-        if max_samples is not None:
-            max_iter = max_samples // batch_size
-        else:
-            max_iter = None
-
         all_accuracies = []
         all_accuracies_ema = []
 
-        for i, data in enumerate(eval_data):
-        # for _iteration in range(total_iters):
-            try:
-                data = next(eval_data)
-            except StopIteration:
-                break
-            if max_iter is not None and i == max_iter:
-                break
-
+        for data in tqdm(eval_data, desc="Validating", total=len(self.dataloader_val)):
             image, question, question_len, answer = data['image'], data['question'], data['question_length'], data['answer']
             answer = answer.long()
             image = image.to(self.device)

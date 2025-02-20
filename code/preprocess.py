@@ -4,19 +4,26 @@ import json
 import pickle
 
 import nltk
-import tqdm
+from tqdm import tqdm
 import argparse
 from PIL import Image
 
-def process_question(root, split, word_dic=None, answer_dic=None):
+def process_question(root, split, word_dic=None, answer_dic=None, set='org'):
     if word_dic is None:
         word_dic = {}
 
     if answer_dic is None:
         answer_dic = {}
 
-    with open(os.path.join(root, 'questions', f'CLEVR_{split}_questions.json')) as f:
-        data = json.load(f)
+    if set == 'human':
+        with open(os.path.join(root, 'questions', f'CLEVR-Humans-{split}.json')) as f:
+            data = json.load(f)
+    elif set == 'hard':
+        with open(os.path.join(root, 'questions', f'CLEVR_{split}_hard.json')) as f:
+            data = json.load(f)
+    elif set == 'org':
+        with open(os.path.join(root, 'questions', f'CLEVR_{split}_questions.json')) as f:
+            data = json.load(f)
 
     result = []
     word_index = 1
@@ -33,7 +40,7 @@ def process_question(root, split, word_dic=None, answer_dic=None):
     # image_filename::str; the name of the image file
     # question::[int]; a list of words index from word_dic
     # answer:: int; an index from answer_dic. All possible answers are stored in answer_dic.
-    for question in tqdm.tqdm(data['questions'], desc=f'Processing {split} dataset', total=len(data['questions'])):
+    for question in tqdm(data['questions'], desc=f'Processing {split} dataset', total=len(data['questions'])):
         # tokenize the string into a list of words [word]
         words = nltk.word_tokenize(question['question'])
         question_token = []
@@ -61,20 +68,30 @@ def process_question(root, split, word_dic=None, answer_dic=None):
         result.append((question['image_filename'], question_token, answer))
 
     #  pickle file to store python objects (list: result) in binary format
-    with open(f'../data/{split}.pkl', 'wb') as f:
+    with open(f'../data/{split}_{set}.pkl', 'wb') as f:
         pickle.dump(result, f)
 
     return word_dic, answer_dic
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Description of your program")
-    parser.add_argument('-d', '--data', help='Description for foo argument', required=False, default='D:\\University\\Project\\CLEVR_v1.0')
+    parser.add_argument('-d', '--data', default='D:\\University\\Project\\CLEVR_v1.0')
+    parser.add_argument('-set', '--set', default='hard', choices=['org', 'hard','human'])
+    parser.add_argument('-split', '--split', default='val')
     args = parser.parse_args()
 
     root = args.data
+    if (args.set == 'org'):
+        word_dic, answer_dic = process_question(root, 'train')
+        process_question(root, 'val', word_dic, answer_dic)
 
-    word_dic, answer_dic = process_question(root, 'train')
-    process_question(root, 'val', word_dic, answer_dic)
+        with open('../data/dic.pkl', 'wb') as f:
+            pickle.dump({'word_dic': word_dic, 'answer_dic': answer_dic}, f)
 
-    with open('../data/dic.pkl', 'wb') as f:
-        pickle.dump({'word_dic': word_dic, 'answer_dic': answer_dic}, f)
+    # using the preprocessed dictionary obtained from original CLEVR dataset to process human / hard dataset
+    else:
+        dicts = pickle.load(open(os.path.join(os.pardir, "data", "dic.pkl"), "rb"))
+        word_dict, answer_dict = dicts["word_dic"], dicts["answer_dic"]
+
+        process_question(root, args.split, word_dict, answer_dict, set=args.set)
+

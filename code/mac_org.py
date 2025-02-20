@@ -33,8 +33,8 @@ class ControlUnit(nn.Module):
     def __init__(self, cfg, module_dim, max_step=4, step_specific=False):
         super().__init__()
         self.cfg = cfg
-        self.attn = spectral_norm(nn.Linear(module_dim, 1))
-        self.control_input = nn.Sequential(spectral_norm(nn.Linear(module_dim*2, module_dim)),
+        self.attn = nn.Linear(module_dim, 1)
+        self.control_input = nn.Sequential(nn.Linear(module_dim*2, module_dim),
                                            nn.Tanh())
         if step_specific:
             self.control_input_u = nn.ModuleList()
@@ -43,6 +43,7 @@ class ControlUnit(nn.Module):
 
         self.module_dim = module_dim
 
+    # drop out
     def mask(self, question_lengths, device):
         max_len = question_lengths.max().item()
         mask = torch.arange(max_len, device=device).expand(len(question_lengths), int(max_len)) < question_lengths.unsqueeze(1)
@@ -76,7 +77,7 @@ class ControlUnit(nn.Module):
         # compute attention distribution over words and summarize them accordingly
         logits = self.attn(interactions)
 
-        # mask logits before computing attention
+        # mask logits  before computing attention
         # question_lengths = torch.cuda.FloatTensor(question_lengths)
         # mask = self.mask(question_lengths, logits.device).unsqueeze(-1)
         # logits += mask
@@ -97,12 +98,12 @@ class ReadUnit(nn.Module):
     def __init__(self, module_dim):
         super().__init__()
 
-        self.concat = spectral_norm(nn.Linear(module_dim * 2, module_dim))
-        self.concat_2 = spectral_norm(nn.Linear(module_dim, module_dim))
-        self.attn = spectral_norm(nn.Linear(module_dim, 1))
+        self.concat = nn.Linear(module_dim * 2, module_dim)
+        self.concat_2 = nn.Linear(module_dim, module_dim)
+        self.attn = nn.Linear(module_dim, 1)
         self.dropout = nn.Dropout(0.15)
-        self.kproj = spectral_norm(nn.Linear(module_dim, module_dim))
-        self.mproj = spectral_norm(nn.Linear(module_dim, module_dim))
+        self.kproj = nn.Linear(module_dim, module_dim)
+        self.mproj = nn.Linear(module_dim, module_dim)
 
         self.activation = nn.ELU()
         self.module_dim = module_dim
@@ -124,15 +125,12 @@ class ReadUnit(nn.Module):
         """
         ## Step 1: knowledge base / memory interactions
         # compute interactions between knowledge base and memory
-
-        # remove dropout to remain 1-Lipschitz constant
-        # know = self.dropout(know)
-        # if memDpMask is not None:
-        #     if self.training:
-        #         memory = applyVarDpMask(memory, memDpMask, 0.85)
-        # else:
-        #     memory = self.dropout(memory)
-
+        know = self.dropout(know)
+        if memDpMask is not None:
+            if self.training:
+                memory = applyVarDpMask(memory, memDpMask, 0.85)
+        else:
+            memory = self.dropout(memory)
         know_proj = self.kproj(know)
         memory_proj = self.mproj(memory)
         memory_proj = memory_proj.unsqueeze(1)
@@ -151,9 +149,7 @@ class ReadUnit(nn.Module):
 
         ## Step 3: sum attentions up over the knowledge base
         # transform vectors to attention distribution
-
-        # Remove dropout to remain 1-Lipschitz constant
-        # interactions = self.dropout(interactions)
+        interactions = self.dropout(interactions)
         attn = self.attn(interactions).squeeze(-1)
         attn = F.softmax(attn, 1)
 
@@ -168,7 +164,7 @@ class WriteUnit(nn.Module):
     def __init__(self, cfg, module_dim):
         super().__init__()
         self.cfg = cfg
-        self.linear = spectral_norm(nn.Linear(module_dim * 2, module_dim))
+        self.linear = nn.Linear(module_dim * 2, module_dim)
 
     def forward(self, memory, info):
         newMemory = torch.cat([memory, info], -1)
