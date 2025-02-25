@@ -14,7 +14,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', dest='cfg_file', help='optional config file', default='..\\cfg\\clevr_train_mac.yml', type=str)
     parser.add_argument('--gpu',  dest='gpu', type=str, default='0')
-    parser.add_argument('--set', dest='set', type=str, choices=['org', 'human', 'hard'], default='hard')
+    parser.add_argument('--set', dest='set', type=str, choices=['org', 'human', 'hard'], default='org')
     parser.add_argument('--steps', dest='steps', type=int, default=4)
 
     parser.add_argument('--model_path', dest='model_path', type=str, default='..\\log\\model_recall.pth')
@@ -75,10 +75,7 @@ if __name__ == "__main__":
 
     os.environ["CUDA_VISIBLE_DEVICES"] = cfg.GPU_ID
 
-    if cfg.CUDA:
-        device = 'cuda'
-    else:
-        device = 'cpu'
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     validate(args.model_path, device, args.set)
 

@@ -125,13 +125,12 @@ class ReadUnit(nn.Module):
         ## Step 1: knowledge base / memory interactions
         # compute interactions between knowledge base and memory
 
-        # remove dropout to remain 1-Lipschitz constant
-        # know = self.dropout(know)
-        # if memDpMask is not None:
-        #     if self.training:
-        #         memory = applyVarDpMask(memory, memDpMask, 0.85)
-        # else:
-        #     memory = self.dropout(memory)
+        know = self.dropout(know)
+        if memDpMask is not None:
+            if self.training:
+                memory = applyVarDpMask(memory, memDpMask, 0.85)
+        else:
+            memory = self.dropout(memory)
 
         know_proj = self.kproj(know)
         memory_proj = self.mproj(memory)
@@ -152,8 +151,7 @@ class ReadUnit(nn.Module):
         ## Step 3: sum attentions up over the knowledge base
         # transform vectors to attention distribution
 
-        # Remove dropout to remain 1-Lipschitz constant
-        # interactions = self.dropout(interactions)
+        interactions = self.dropout(interactions)
         attn = self.attn(interactions).squeeze(-1)
         attn = F.softmax(attn, 1)
 
