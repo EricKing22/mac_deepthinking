@@ -40,6 +40,10 @@ class ClevrDataset(Dataset):
 
         self.imgs_path = os.path.join(data_dir, '{}.h5'.format(split))
 
+        self.h5_file = h5py.File(self.imgs_path, 'r')
+        self.features = self.h5_file['features']
+
+
 
     def __getitem__(self, index):
         imgfile, question, answer = self.data[index]
@@ -47,14 +51,20 @@ class ClevrDataset(Dataset):
         img_id = int(imgfile.rsplit('_', 1)[1][:-4])
 
         # create img tensor
-        imgs = h5py.File(self.imgs_path, 'r')['features']
-        img = torch.from_numpy(imgs[img_id])
+        # imgs = h5py.File(self.imgs_path, 'r')['features']
+        # img = torch.from_numpy(imgs[img_id])
+
+        img = torch.from_numpy(self.features[img_id])
 
         return img, question, len(question), answer
 
     def __len__(self):
         return len(self.data)
 
+    def __del__(self):
+        # Cleanup when instance is destroyed
+        if hasattr(self, 'h5_file'):
+            self.h5_file.close()
 
 def collate_fn(batch):
     images, lengths, answers, _ = [], [], [], []

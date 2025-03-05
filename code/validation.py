@@ -4,8 +4,8 @@ import argparse
 from config import cfg_from_file, cfg
 import os
 import torch
-import mac
-import mac_org
+#import mac
+import mac_org as mac
 from utils import load_vocab
 from tqdm import tqdm
 
@@ -31,7 +31,7 @@ def validate(model_path, device, set):
     vocab = load_vocab(cfg)
     model,model_ema = mac.load_MAC(cfg, vocab)
     checkpoint = torch.load(model_path,weights_only=True)
-    print(f"Model trained using max steps: {checkpoint['max_steps']}")
+    #print(f"Model trained using max steps: {checkpoint['max_steps']}")
     print(f"Using inference iteration: {cfg.TRAIN.MAX_STEPS}")
     model.load_state_dict(checkpoint["model"])
     model.eval()

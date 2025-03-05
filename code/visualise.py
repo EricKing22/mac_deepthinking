@@ -5,7 +5,7 @@ from datasets import ClevrDataset, collate_fn
 from config import cfg_from_file, cfg
 import torch
 import os
-import mac
+import mac_org as mac
 from tqdm import tqdm
 
 # Parsing function
@@ -35,40 +35,9 @@ def parse_training_log(data):
 
     return epochs, val_acc, val_acc_ema, avg_loss, lr
 
-def plot_training_results(data):
-    # Parse data
-    epochs, val_acc, val_acc_ema, avg_loss, lr = parse_training_log(data)
-
-    # Plotting
-    plt.figure(figsize=(12, 5))
-
-    # Average Loss
-    plt.subplot(1, 2, 1)
-    plt.plot(epochs, avg_loss, label="Training Loss", marker='o', color='orange')
-    plt.title("Training Loss")
-    plt.xlabel("Epoch")
-    plt.xticks(epochs[1::2])
-    plt.ylabel("Loss")
-    plt.legend()
-    plt.grid(True)
-
-    # Validation Accuracy
-    plt.subplot(1, 2, 2)
-    plt.plot(epochs, val_acc, label="Val Acc", marker='o')
-    plt.title("Validation Accuracy")
-    plt.xlabel("Epoch")
-    plt.xticks(epochs[1::2])
-    plt.ylabel("Accuracy")
-    plt.legend()
-    plt.grid(True)
-
-    # Adjust layout
-    plt.tight_layout()
-    plt.savefig('../results/plot_recall_step_specific.png')
-    plt.show()
 
 
-def plot_iteration_steps(model_path, dataset, device):
+def get_acc_at_iteration_steps(model_path, dataset, device):
     dataset = ClevrDataset(cfg.DATASET.DATA_DIR, dataset, 'val')
     loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, drop_last=False, num_workers=cfg.WORKERS, collate_fn=collate_fn)
 
@@ -100,12 +69,47 @@ def plot_iteration_steps(model_path, dataset, device):
             accuries.append(accuracy)
 
         avg_accuracy = sum(accuries) / float(len(accuries))
-        print(f"{steps} steps model avg accuracy: {avg_accuracy}")
+        print(f"{steps} steps model avg accuracy: {avg_accuracy} on {args.set}")
         all_accuracies.append(avg_accuracy)
 
     return all_accuracies
 
 
+
+def log_results(accuracies, model_name, max_steps):
+    if not os.path.exists(f'../results/{args.acc_file}.txt'):
+        with open(f'../results/{args.acc_file}.txt', 'w') as f:
+            f.write("")
+
+    with open(f'../results/{args.acc_file}.txt', 'a') as f:
+        f.write(f"-----{model_name} accuracies on {args.set}-----\n")
+        for (iteration, accuracy) in zip(range(2,max_steps,2),accuracies):
+            f.write(f"Iteration {iteration}: {accuracy}\n")
+        f.write("\n")
+
+
+def plt_accuracies():
+    with open(f"../results/{args.acc_file}.txt", "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            if "-----" in line:
+                model_name = line.split(" ")[0].replace("-","")
+                accuracies = []
+            elif "Iteration" in line:
+                accuracies.append(float(line.split(" ")[-1]))
+            elif line == "\n":
+                plt.plot(range(2, cfg.TRAIN.MAX_STEPS, 2), accuracies, label=model_name, marker='o')
+
+    # plt.axhline(y=0.9766855460381485, color='r', linestyle='--', label='4_step_recall+specific')
+
+    plt.xlabel("Inference-Time Iterations")
+    plt.xticks(range(2, cfg.TRAIN.MAX_STEPS, 2))
+    plt.ylabel("Accuracy")
+    plt.legend(loc='upper right')
+    plt.grid(True)
+
+    plt.savefig(f'../results/{args.img_name}.png')
+    plt.show()
 
 
 
@@ -113,9 +117,10 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', dest='cfg_file', help='optional config file', default='..\\cfg\\clevr_train_mac.yml', type=str)
     parser.add_argument('--gpu',  dest='gpu', type=str, default='0')
-    parser.add_argument('--set', dest='set', type=str, choices=['org', 'human', 'hard'], default='org')
-    parser.add_argument('--max_steps', dest='max_steps', type=int, default=20)
-    parser.add_argument('--img_name', dest='img_name', type=str)
+    parser.add_argument('--set', dest='set', type=str, choices=['org', 'human', 'hard'], default='human')
+    parser.add_argument('--max_steps', dest='max_steps', type=int, default=48)
+    parser.add_argument('--img_name', dest='img_name', type=str, default="human_models_results")
+    parser.add_argument('--acc_file', dest='acc_file', type=str, default='accuracies_human')
     parser.add_argument('--model_path', dest='model_path', type=str)
     parser.add_argument('--manualSeed', type=int, help='manual seed')
     args = parser.parse_args()
@@ -135,25 +140,31 @@ if __name__ == "__main__":
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    step_4_model_path = '../log/50_epochs_4_steps_final/Model/model_checkpoint_000050.pth'
-    steps_4_accuracies = plot_iteration_steps(step_4_model_path, args.set, device)
-
-    plt.plot(range(2, cfg.TRAIN.MAX_STEPS+1, 2), steps_4_accuracies, label="4_steps_model", marker='o')
-
-    step_8_model_path = '../log/50_epochs_8_steps_final/Model/model_checkpoint_000050.pth'
-    steps_8_accuracies = plot_iteration_steps(step_8_model_path, args.set, device)
-
-    plt.plot(range(2, cfg.TRAIN.MAX_STEPS+1, 2), steps_8_accuracies, label="8_steps_model", marker='o')
 
 
-    plt.xlabel("Inference-Time Iterations")
-    plt.xticks(range(2, cfg.TRAIN.MAX_STEPS+1, 2))
-    plt.ylabel("Accuracy")
+    # step_4_model_path = '../log/50_epochs_4_steps_final/Model/model_checkpoint_000050.pth'
+    # steps_4_accuracies = plot_iteration_steps(step_4_model_path, args.set, device)
+    #
+    # log_results(steps_4_accuracies, "4_steps_DTL", cfg.TRAIN.MAX_STEPS)
+    #
+    # plt.plot(range(2, cfg.TRAIN.MAX_STEPS+1, 2), steps_4_accuracies, label="4_steps_DTL", marker='o')
+    #
+    # step_8_model_path = '../log/50_epochs_8_steps_final/Model/model_checkpoint_000050.pth'
+    # steps_8_accuracies = plot_iteration_steps(step_8_model_path, args.set, device)
+    #
+    # plt.plot(range(2, cfg.TRAIN.MAX_STEPS+1, 2), steps_8_accuracies, label="8_steps_model", marker='o')
+    #
+    # log_results(steps_8_accuracies, "8_steps_DTL", cfg.TRAIN.MAX_STEPS)
+    #
+    # recall_model_path = '../log/model_recall.pth'
+    # recall_accuracies = get_acc_at_iteration_steps(recall_model_path, args.set, device)
+    #
+    # log_results(recall_accuracies, "4_steps_recall", cfg.TRAIN.MAX_STEPS)
 
-    plt.legend()
-    plt.grid(True)
+    plt_accuracies()
+    #
+    # recall_model_step_specific_path = '../log/model_recall_step_specific.pth'
+    # recall_step_specific_accuracies = get_acc_at_iteration_steps(recall_model_step_specific_path, args.set, device)
+    #
+    # log_results(recall_step_specific_accuracies, "recall_step_specific_model", 2)
 
-    if args.img_name is not None:
-        plt.savefig(f'../results/{args.img_name}.png')
-    else:
-        plt.savefig('../results/img.png')

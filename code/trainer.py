@@ -70,11 +70,11 @@ class Trainer():
 
         # load dataset
         self.dataset = ClevrDataset(data_dir=self.data_dir, set="org", split="train")
-        self.dataloader = DataLoader(dataset=self.dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True,
+        self.dataloader = DataLoader(dataset=self.dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=True, pin_memory=True,
                                        num_workers=cfg.WORKERS, drop_last=True, collate_fn=collate_fn)
 
         self.dataset_val = ClevrDataset(data_dir=self.data_dir, set="org", split="val")
-        self.dataloader_val = DataLoader(dataset=self.dataset_val, batch_size=cfg.TRAIN.BATCH_SIZE, drop_last=True,
+        self.dataloader_val = DataLoader(dataset=self.dataset_val, batch_size=cfg.TRAIN.BATCH_SIZE, drop_last=True, pin_memory=True,
                                          shuffle=False, num_workers=cfg.WORKERS, collate_fn=collate_fn)
 
         # load model

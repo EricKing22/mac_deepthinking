@@ -1,0 +1,75 @@
+-----4_steps_model accuracies on hard-----
+Iteration 2: 0.5
+Iteration 4: 0.7
+Iteration 6: 0.6
+Iteration 8: 0.7
+Iteration 10: 0.7
+Iteration 12: 0.7
+Iteration 14: 0.7
+Iteration 16: 0.7
+Iteration 18: 0.7
+Iteration 20: 0.7
+Iteration 22: 0.7
+Iteration 24: 0.7
+Iteration 26: 0.7
+Iteration 28: 0.7
+Iteration 30: 0.7
+Iteration 32: 0.7
+Iteration 34: 0.7
+Iteration 36: 0.7
+Iteration 38: 0.7
+Iteration 40: 0.7
+Iteration 42: 0.7
+Iteration 44: 0.7
+Iteration 46: 0.7
+
+-----8_steps_model accuracies on hard-----
+Iteration 2: 0.6
+Iteration 4: 0.6
+Iteration 6: 0.7
+Iteration 8: 0.9
+Iteration 10: 0.8
+Iteration 12: 0.8
+Iteration 14: 0.7
+Iteration 16: 0.7
+Iteration 18: 0.8
+Iteration 20: 0.8
+Iteration 22: 0.8
+Iteration 24: 0.7
+Iteration 26: 0.8
+Iteration 28: 0.8
+Iteration 30: 0.8
+Iteration 32: 0.8
+Iteration 34: 0.8
+Iteration 36: 0.8
+Iteration 38: 0.8
+Iteration 40: 0.8
+Iteration 42: 0.8
+Iteration 44: 0.8
+Iteration 46: 0.8
+
+-----4_steps_recall accuracies on hard-----
+Iteration 2: 0.5
+Iteration 4: 0.7
+Iteration 6: 0.5
+Iteration 8: 0.4
+Iteration 10: 0.6
+Iteration 12: 0.6
+Iteration 14: 0.3
+Iteration 16: 0.6
+Iteration 18: 0.5
+Iteration 20: 0.5
+Iteration 22: 0.6
+Iteration 24: 0.5
+Iteration 26: 0.3
+Iteration 28: 0.7
+Iteration 30: 0.4
+Iteration 32: 0.4
+Iteration 34: 0.6
+Iteration 36: 0.6
+Iteration 38: 0.3
+Iteration 40: 0.6
+Iteration 42: 0.6
+Iteration 44: 0.4
+Iteration 46: 0.7
+
