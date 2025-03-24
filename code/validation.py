@@ -5,7 +5,7 @@ from config import cfg_from_file, cfg
 import os
 import torch
 #import mac
-import mac_org as mac
+import mac as mac
 from utils import load_vocab
 from tqdm import tqdm
 
