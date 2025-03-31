@@ -31,14 +31,14 @@ def load_MAC(cfg, vocab):
 
 class ControlUnit(nn.Module):
     def __init__(self, cfg, module_dim, max_step=4, step_specific=False):
-        super().__init__()
+        super(ControlUnit, self).__init__()
         self.cfg = cfg
         self.attn = spectral_norm(nn.Linear(module_dim, 1))
-        self.control_input = nn.Sequential(spectral_norm(nn.Linear(module_dim*2, module_dim)),
+        self.control_input = nn.Sequential(spectral_norm(nn.Linear(module_dim, module_dim)),
                                            nn.Tanh())
         if step_specific:
             self.control_input_u = nn.ModuleList()
-            for i in range(4):
+            for i in range(max_step):
                 self.control_input_u.append(nn.Linear(module_dim, module_dim))
 
         self.module_dim = module_dim
@@ -64,17 +64,25 @@ class ControlUnit(nn.Module):
             step: which step in the reasoning chain
         """
         # compute interactions with question words
-        question = torch.concat([control,question], -1)
+        # question = torch.concat([control,question], -1)
         question = self.control_input(question)
         if cfg.TRAIN.STEP_SPECIFIC:
-            question = self.control_input_u[step % 4](question)
+            question = self.control_input_u[step](question)
 
         newContControl = question
         newContControl = torch.unsqueeze(newContControl, 1)
-        interactions = newContControl * context
+        # newContControl = Query, context = key & Value
+        # try new l2 self-attention
+        # interactions = newContControl * context
+
+        newContext = self.control_input(context)
+
+        diff = newContControl - newContext
+        logits = torch.divide(diff**2, torch.sqrt(torch.tensor(self.module_dim)))
 
         # compute attention distribution over words and summarize them accordingly
-        logits = self.attn(interactions)
+        logits = self.attn(logits)
+
 
         # mask logits before computing attention
         # question_lengths = torch.cuda.FloatTensor(question_lengths)
@@ -87,8 +95,21 @@ class ControlUnit(nn.Module):
         # Therefore, the logits tensor will have a shape of [batchSize, questionLength, 1].
         attn = F.softmax(logits, 1)
 
-        # apply soft attention to current context words
+        # apply attention score to context words
         next_control = (attn * context).sum(1)
+
+        # if (not self.training):
+        #     for name, module in self.named_children():
+        #         if hasattr(module, "weight"):  # Check if the module has a 'weight' attribute
+        #             normalized_weight = module.weight  # This is the dynamically normalized weight
+        #             print(f"{name}.weight spectral norm:",
+        #                   torch.linalg.svdvals(normalized_weight)[0])
+        #         else:
+        #             for sub_module in module.children():
+        #                 if hasattr(sub_module, "weight"):
+        #                     normalized_weight = sub_module.weight
+        #                     print(f"{name}.{sub_module}.weight spectral norm:",
+        #                           torch.linalg.svdvals(normalized_weight)[0])
 
         return next_control
 

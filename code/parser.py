@@ -12,6 +12,8 @@ def parse_question(question_token):
 
     question = ""
     for token in question_token:
+        if token == 0:
+            continue
         question += reverse_word_dict[token] + " "
 
     return question.strip()
@@ -34,12 +36,34 @@ def get_answer_dict():
     return answer_dict
 
 if __name__ == "__main__":
-    with open("../data/train.pkl", "rb") as f:
+    with open("../data/train_long.pkl", "rb") as f:
         data = pickle.load(f)
-        img_file, example_question, example_answer = data[0]
+        img_file, question_token, answer_token = data[0]
+
+    print(parse_question(question_token))
+    print(parse_answer(answer_token))
+    # with open("../data/train.pkl", "rb") as f:
+    #     data = pickle.load(f)
+    #     print(f"There are {len(data)} questions in the training set.")
+    #
+    # short_questions = []
+    # long_questions = []
+    # avg_question_length = 19
+    #
+    # for img_file, question, answer in data:
+    #     question_length = len(question)
+    #     if question_length <= avg_question_length:
+    #         short_questions.append((img_file, question, answer))
+    #     elif question_length > avg_question_length:
+    #         long_questions.append((img_file, question, answer))
+    #
+    # with open("../data/train_short.pkl", "wb") as f:
+    #     pickle.dump(short_questions, f)
+    #
+    # with open("../data/train_long.pkl", "wb") as f:
+    #     pickle.dump(long_questions, f)
+    #
+    # print(f"There are {len(short_questions)} short questions and {len(long_questions)} long questions in the training set.")
 
 
 
-    print(img_file)
-    print(parse_question(example_question))
-    print(parse_answer(example_answer))

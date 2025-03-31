@@ -32,7 +32,7 @@ parser.add_argument('--model_stage', default=3, type=int)
 parser.add_argument('--batch_size', default=32, type=int)
 parser.add_argument('--gpus', default = None, type=str)
 
-parser.add_argument('--target', default='train', type=str)
+parser.add_argument('--target', default='val', type=str)
 
 
 

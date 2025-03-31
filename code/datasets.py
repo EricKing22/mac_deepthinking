@@ -37,11 +37,11 @@ class ClevrDataset(Dataset):
             with open(os.path.join(data_dir, '{}.pkl'.format(split)), 'rb') as f:
                 self.data = pickle.load(f)
 
+        if "_long" in split or "_short" in split:
+            split = split.split("_")[0]
 
         self.imgs_path = os.path.join(data_dir, '{}.h5'.format(split))
 
-        self.h5_file = h5py.File(self.imgs_path, 'r')
-        self.features = self.h5_file['features']
 
 
 
@@ -51,10 +51,10 @@ class ClevrDataset(Dataset):
         img_id = int(imgfile.rsplit('_', 1)[1][:-4])
 
         # create img tensor
-        # imgs = h5py.File(self.imgs_path, 'r')['features']
-        # img = torch.from_numpy(imgs[img_id])
+        imgs = h5py.File(self.imgs_path, 'r')['features']
+        img = torch.from_numpy(imgs[img_id])
 
-        img = torch.from_numpy(self.features[img_id])
+        #img = torch.from_numpy(self.features[img_id])
 
         return img, question, len(question), answer
 

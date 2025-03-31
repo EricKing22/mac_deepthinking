@@ -4,10 +4,11 @@ import argparse
 from config import cfg_from_file, cfg
 import os
 import torch
-#import mac
-import mac as mac
+import mac
+import mac_org as mac_step_specific
 from utils import load_vocab
 from tqdm import tqdm
+from parser import parse_answer, parse_question
 
 
 def parse_args():
@@ -15,28 +16,35 @@ def parse_args():
     parser.add_argument('--cfg', dest='cfg_file', help='optional config file', default='..\\cfg\\clevr_train_mac.yml', type=str)
     parser.add_argument('--gpu',  dest='gpu', type=str, default='0')
     parser.add_argument('--set', dest='set', type=str, choices=['org', 'human', 'hard'], default='org')
-    parser.add_argument('--steps', dest='steps', type=int, default=4)
+    parser.add_argument('--steps', dest='steps', type=int, default=48)
 
-    parser.add_argument('--model_path', dest='model_path', type=str, default='..\\log\\model_recall.pth')
+    parser.add_argument('--model_path', dest='model_path', type=str, default='..\\log\\50_epochs_4_steps_DTL_specific\\Model\\model_checkpoint_000015.pth')
     parser.add_argument('--manualSeed', type=int, help='manual seed')
+    parser.add_argument('--wrongs_answers_path', type=str)
     args = parser.parse_args()
     return args
 
 
 def validate(model_path, device, set):
+    print(f"Using inference iteration: {cfg.TRAIN.MAX_STEPS}")
+
     val_dataset = ClevrDataset(cfg.DATASET.DATA_DIR, set, 'val')
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, drop_last=False, num_workers=cfg.WORKERS, collate_fn=collate_fn)
 
 
     vocab = load_vocab(cfg)
+
     model,model_ema = mac.load_MAC(cfg, vocab)
+
+
     checkpoint = torch.load(model_path,weights_only=True)
     #print(f"Model trained using max steps: {checkpoint['max_steps']}")
-    print(f"Using inference iteration: {cfg.TRAIN.MAX_STEPS}")
+
     model.load_state_dict(checkpoint["model"])
     model.eval()
     all_accuracies = []
-
+    all_wrong_answers = []
+    all_correct_answers = []
     for data in tqdm(iter(val_loader), desc='Validating', total=len(val_loader)):
         image, question, question_len, answer = data['image'], data['question'], data['question_length'], data['answer']
         answer = answer.long()
@@ -49,11 +57,28 @@ def validate(model_path, device, set):
         with torch.no_grad():
             scores = model(image, question, question_len)
 
-
-
         correct = scores.detach().argmax(1) == answer
         accuracy = correct.sum().cpu().numpy() / answer.shape[0]
         all_accuracies.append(accuracy)
+
+        if (args.wrongs_answers_path != None):
+            incorrect = scores.detach().argmax(1) != answer
+            wrong_answers = scores[incorrect].detach().argmax(1).to("cpu")
+            wrong_questions = question[incorrect].detach().to("cpu")
+            correct_answers = answer[incorrect].detach().to("cpu")
+
+            for i in range(len(wrong_answers)):
+                question_str = parse_question(wrong_questions[i].tolist())
+                correct_answer_str = parse_answer(correct_answers[i].item())
+                wrong_answer_str = parse_answer(wrong_answers[i].item())
+
+                all_wrong_answers.append(wrong_answer_str)
+                all_correct_answers.append(correct_answer_str)
+
+    if (args.wrongs_answers_path != None):
+        with open(f"../results/{args.wrongs_answers_path}", "w") as f:
+            for wrong,correct in zip(all_wrong_answers, all_correct_answers):
+                f.write(f"{wrong},{correct}\n")
 
     accuracy = sum(all_accuracies) / float(len(all_accuracies))
     print(f"Validation accuracy: {accuracy}")

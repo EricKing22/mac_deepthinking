@@ -1,0 +1,9 @@
+-----short_train_DTL accuracies on org-----
+Iteration 2: 0.644259133279296
+Iteration 4: 0.6630337395785085
+Iteration 6: 0.6604808360352015
+Iteration 8: 0.6596657523737841
+Iteration 10: 0.6592566726493747
+Iteration 12: 0.6589610352014822
+Iteration 14: 0.6589306391848078
+
