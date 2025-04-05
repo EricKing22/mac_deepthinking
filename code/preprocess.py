@@ -43,6 +43,7 @@ def process_question(root, split, word_dic=None, answer_dic=None, set='org'):
     for question in tqdm(data['questions'], desc=f'Processing {split} dataset', total=len(data['questions'])):
         # tokenize the string into a list of words [word]
         words = nltk.word_tokenize(question['question'])
+
         question_token = []
 
         for word in words:
@@ -76,14 +77,14 @@ def process_question(root, split, word_dic=None, answer_dic=None, set='org'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Description of your program")
     parser.add_argument('-d', '--data', default='D:\\University\\Project\\CLEVR_v1.0')
-    parser.add_argument('-set', '--set', default='hard', choices=['org', 'hard','human'])
-    parser.add_argument('-split', '--split', default='val')
+    parser.add_argument('-set', '--set', default='org', choices=['org', 'hard','human'])
+    parser.add_argument('-split', '--split', default='train')
     args = parser.parse_args()
 
     root = args.data
-    if (args.set == 'org'):
+    if args.set == 'org' and not os.path.exists(os.path.join(os.pardir, "data", "dic.pkl")):
         word_dic, answer_dic = process_question(root, 'train')
-        process_question(root, 'val', word_dic, answer_dic)
+        process_question(root, args.split, word_dic, answer_dic)
 
         with open('../data/dic.pkl', 'wb') as f:
             pickle.dump({'word_dic': word_dic, 'answer_dic': answer_dic}, f)
