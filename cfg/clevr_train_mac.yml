@@ -13,7 +13,7 @@ TRAIN:
     PATIENCE: 5
     CLIP_GRADS: True
     MAX_STEPS: 4
-    STEP_SPECIFIC: True
+    STEP_SPECIFIC: False
 
 DATASET:
     DATA_DIR: '../data'

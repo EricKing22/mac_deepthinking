@@ -43,14 +43,14 @@ def parse_training_log(data):
 
 
 def get_acc_at_iteration_steps(model_path, dataset, device):
-    dataset = ClevrDataset(cfg.DATASET.DATA_DIR, dataset, 'val')
+    dataset = ClevrDataset(cfg.DATASET.DATA_DIR, dataset, 'train_org_long')
     loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, drop_last=False, num_workers=cfg.WORKERS, collate_fn=collate_fn)
 
     vocab = mac.load_vocab(cfg)
 
     all_accuracies = []
 
-    for steps in range(4, cfg.TRAIN.MAX_STEPS+1,4):
+    for steps in range(2, cfg.TRAIN.MAX_STEPS+1,2):
         print(f"Validating using inference iteration: {steps}")
         cfg.TRAIN.MAX_STEPS = steps
         model, model_ema = mac.load_MAC(cfg, vocab)
@@ -88,13 +88,13 @@ def log_results(accuracies, model_name, max_steps, file_name=None):
 
     with open(f'../results/{file_name}.txt', 'a') as f:
         f.write(f"-----{model_name} accuracies on {args.set}-----\n")
-        for (iteration, accuracy) in zip(range(4,max_steps,4),accuracies):
+        for (iteration, accuracy) in zip(range(2,max_steps,2),accuracies):
             f.write(f"Iteration {iteration}: {accuracy}\n")
         f.write("\n")
 
 
-def plt_accuracies():
-    with open(f"../results/{args.acc_file}.txt", "r") as f:
+def plt_accuracies(acc_file):
+    with open(f"../results/{acc_file}.txt", "r") as f:
         lines = f.readlines()
         for line in lines:
             if "-----" in line:
@@ -104,19 +104,21 @@ def plt_accuracies():
                 accuracies.append(float(line.split(" ")[-1]))
             elif line == "\n":
                 if "specific" in model_name:
+                    continue
                     plt.plot(range(4, cfg.TRAIN.MAX_STEPS+1, 4), accuracies, label=model_name, marker='o')
                 else:
                     plt.plot(range(2, cfg.TRAIN.MAX_STEPS, 2), accuracies, label=model_name, marker='o')
 
-    # plt.axhline(y=0.9766855460381485, color='r', linestyle='--', label='4_step_recall+specific')
+    plt.axhline(y=0.8512736111594253, color='r', linestyle='--', label='4_steps_MAC')
 
     plt.xlabel("Inference-Time Iterations")
     plt.xticks(range(2, cfg.TRAIN.MAX_STEPS, 2))
     plt.ylabel("Accuracy")
+    plt.ylim(0.3,1)
     plt.legend(loc='upper right')
     plt.grid(True)
 
-    plt.savefig(f'../results/{args.img_name}.png')
+    plt.savefig(f'../results/long_models_results.png')
     plt.show()
 
 def plt_confusion_matrix(answer_path):
@@ -126,14 +128,17 @@ def plt_confusion_matrix(answer_path):
         lines = f.readlines()
 
     for line in lines:
-        if line == "\n":
+        line = line.strip()
+        if line == "":
             continue
-        wrong_answer, correct_answer = line.split(",")
+        wrong_answer, correct_answer = line.strip().split(",")
+        if not correct_answer.isdigit():
+            continue
         correct_answers.append(correct_answer)
         wrong_answers.append(wrong_answer)
 
 
-    classes = sorted(list(set(correct_answers + wrong_answers)))
+    classes = sorted(list(set(map(int, correct_answers + wrong_answers))))
 
     class_to_idx = {cls: idx for idx, cls in enumerate(classes)}
 
@@ -143,17 +148,20 @@ def plt_confusion_matrix(answer_path):
     # Populate the matrix with mismatched results
     for true_label, pred_label in zip(correct_answers, wrong_answers):
         if true_label != pred_label:
-            row = class_to_idx[true_label]
-            col = class_to_idx[pred_label]
+            row = class_to_idx[int(true_label)]
+            col = class_to_idx[int(pred_label)]
             matrix[row][col] += 1
+
+    for i in range(len(classes)):
+        matrix[i][i] = 900
 
     cmap = sns.light_palette("navy", as_cmap=True)
 
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(matrix, annot=False, cmap=cmap,  vmin=0, xticklabels=classes, yticklabels=classes)
+    plt.figure(figsize=(6, 6))
+    sns.heatmap(matrix, annot=False, cmap=cmap,  vmin=0, xticklabels=classes, yticklabels=classes, cbar=False)
     plt.xlabel("Predicted")
     plt.ylabel("True")
-    plt.title("Mismatch Confusion Matrix")
+    plt.title("Confusion matrix on counting problems")
     plt.show()
 
 
@@ -163,13 +171,12 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', dest='cfg_file', help='optional config file', default='..\\cfg\\clevr_train_mac.yml', type=str)
     parser.add_argument('--gpu',  dest='gpu', type=str, default='0')
-    parser.add_argument('--set', dest='set', type=str, choices=['org', 'human', 'hard'], default='hard')
+    parser.add_argument('--set', dest='set', type=str, choices=['org', 'human', 'hard'], default='val')
     parser.add_argument('--max_steps', dest='max_steps', type=int, default=48)
-    parser.add_argument('--img_name', dest='img_name', type=str, default="hard_model_results")
-    parser.add_argument('--acc_file', dest='acc_file', type=str, default='accuracies_hard')
+    parser.add_argument('--img_name', dest='img_name', type=str, default="human_models_results")
+    parser.add_argument('--acc_file', dest='acc_file', type=str, default='accuracies_long')
     parser.add_argument('--model_path', dest='model_path', type=str)
     parser.add_argument('--manualSeed', type=int, help='manual seed')
-    parser.add_argument('--wrong_answers_path', type=str)
     args = parser.parse_args()
     return args
 
@@ -225,12 +232,12 @@ if __name__ == "__main__":
     #     print(justification, count, identification)
 
 
-    #plt_confusion_matrix(args.wrongs_answers_path)
+    # plt_confusion_matrix("..\\results\\wrong_answers_4steps.txt")
 
-    #
-    # train_short_model_path = '../log/10_epochs_4_steps_short_train/Model/model_checkpoint_000010.pth'
+
+    # train_short_model_path = '../log/50_epochs_4_steps_short/Model/model_checkpoint_000050.pth'
     # train_short_accuracies = get_acc_at_iteration_steps(train_short_model_path, args.set, device)
-    # log_results(train_short_accuracies, "short_train_DTL", cfg.TRAIN.MAX_STEPS)
+    # log_results(train_short_accuracies, "4_steps_short_train_DTL", cfg.TRAIN.MAX_STEPS, args.acc_file)
 
     # step_4_model_path = '../log/50_epochs_4_steps_final/Model/model_checkpoint_000050.pth'
     # steps_4_accuracies = get_acc_at_iteration_steps(step_4_model_path, args.set, device)
@@ -257,25 +264,27 @@ if __name__ == "__main__":
     #
     # log_results(recall_step_specific_accuracies, "4_step_DTL_specific", 48, args.acc_file)
 
-    plt_accuracies()
+    # plt_accuracies("accuracies_long")
 
 
-    # with open("../results/test_results.txt", "r") as f:
-    #     model_name = "4_steps_recall_DT"
-    #     lines = f.readlines()
-    #     accuracies = []
-    #     for line in lines:
-    #         accuracies.append(float(line.split(" ")[-1]))
-    #
-    # plt.plot(range(2, cfg.TRAIN.MAX_STEPS, 2), accuracies, label=model_name, marker='o')
-    # plt.axhline(y=0.9766855460381485, color='r', linestyle='--', label='4_step_recall_step_specific')
-    #
-    # plt.xlabel("Inference-Time Iterations")
-    # plt.xticks(range(2, cfg.TRAIN.MAX_STEPS+1, 2))
-    # plt.ylabel("Accuracy")
-    # plt.legend(loc='upper right', bbox_to_anchor=(1, 0.9))
-    # plt.grid(True)
-    # plt.savefig(f'../results/{args.img_name}.png')
+    with open("../results/MAC-DT_results.txt", "r") as f:
+        model_name = "4_steps_recall"
+        lines = f.readlines()
+        accuracies = []
+        for line in lines:
+            accuracies.append(float(line.split(" ")[-1]))
+
+    plt.plot(range(2, 48, 2), accuracies, label=model_name, marker='o')
+    plt.axhline(y=0.9766855460381485, color='r', linestyle='--', label='4_steps_MAC')
+
+    plt.xlabel("Inference-Time Iterations")
+    plt.xticks(range(4, 50, 4))
+    plt.ylabel("Accuracy")
+    plt.ylim(0.5, 1)
+    plt.legend(loc='upper right')
+    plt.grid(True)
+    plt.savefig(f'../results/MAC_vs_MACDT.png')
+    plt.show()
 
 
 

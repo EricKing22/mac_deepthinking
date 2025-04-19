@@ -28,7 +28,7 @@ def parse_args():
 def validate(model_path, device, set):
     print(f"Using inference iteration: {cfg.TRAIN.MAX_STEPS}")
 
-    val_dataset = ClevrDataset(cfg.DATASET.DATA_DIR, set, 'val')
+    val_dataset = ClevrDataset(cfg.DATASET.DATA_DIR, set, 'train_org_long')
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, drop_last=False, num_workers=cfg.WORKERS, collate_fn=collate_fn)
 
 

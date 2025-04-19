@@ -1,4 +1,4 @@
------4_steps_model accuracies on human-----
+-----4_steps_DTL accuracies on human-----
 Iteration 2: 0.4073751267748479
 Iteration 4: 0.5580391100405679
 Iteration 6: 0.48416106744421905
@@ -23,7 +23,7 @@ Iteration 42: 0.5128518002028397
 Iteration 44: 0.5131211967545639
 Iteration 46: 0.5131211967545639
 
------8_steps_model accuracies on human-----
+-----8_steps_DTL accuracies on human-----
 Iteration 2: 0.43816556795131845
 Iteration 4: 0.4911019903651116
 Iteration 6: 0.5422873351926978

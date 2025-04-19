@@ -1,4 +1,4 @@
------4_steps_model accuracies on hard-----
+-----4_steps_DTL accuracies on hard-----
 Iteration 2: 0.5
 Iteration 4: 0.7
 Iteration 6: 0.6
@@ -23,7 +23,7 @@ Iteration 42: 0.7
 Iteration 44: 0.7
 Iteration 46: 0.7
 
------8_steps_model accuracies on hard-----
+-----8_steps_DTL accuracies on hard-----
 Iteration 2: 0.6
 Iteration 4: 0.6
 Iteration 6: 0.7
