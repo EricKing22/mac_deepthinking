@@ -43,14 +43,14 @@ def parse_training_log(data):
 
 
 def get_acc_at_iteration_steps(model_path, dataset, device):
-    dataset = ClevrDataset(cfg.DATASET.DATA_DIR, dataset, 'train_org_long')
+    dataset = ClevrDataset(cfg.DATASET.DATA_DIR, dataset, 'val')
     loader = torch.utils.data.DataLoader(dataset, batch_size=cfg.TRAIN.BATCH_SIZE, shuffle=False, drop_last=False, num_workers=cfg.WORKERS, collate_fn=collate_fn)
 
     vocab = mac.load_vocab(cfg)
 
     all_accuracies = []
 
-    for steps in range(2, cfg.TRAIN.MAX_STEPS+1,2):
+    for steps in range(4, cfg.TRAIN.MAX_STEPS+1,4):
         print(f"Validating using inference iteration: {steps}")
         cfg.TRAIN.MAX_STEPS = steps
         model, model_ema = mac.load_MAC(cfg, vocab)
@@ -171,7 +171,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', dest='cfg_file', help='optional config file', default='..\\cfg\\clevr_train_mac.yml', type=str)
     parser.add_argument('--gpu',  dest='gpu', type=str, default='0')
-    parser.add_argument('--set', dest='set', type=str, choices=['org', 'human', 'hard'], default='val')
+    parser.add_argument('--set', dest='set', type=str, choices=['org', 'human', 'hard'], default='org')
     parser.add_argument('--max_steps', dest='max_steps', type=int, default=48)
     parser.add_argument('--img_name', dest='img_name', type=str, default="human_models_results")
     parser.add_argument('--acc_file', dest='acc_file', type=str, default='accuracies_long')
@@ -259,32 +259,32 @@ if __name__ == "__main__":
 
 
 
-    # recall_model_step_specific_path = '../log/50_epochs_4_steps_DTL_specific/Model/model_checkpoint_000015.pth'
-    # recall_step_specific_accuracies = get_acc_at_iteration_steps(recall_model_step_specific_path, args.set, device)
+    recall_model_step_specific_path = '../log/50_epochs_4_steps_DTL_specific/Model/model_checkpoint_000015.pth'
+    recall_step_specific_accuracies = get_acc_at_iteration_steps(recall_model_step_specific_path, args.set, device)
     #
     # log_results(recall_step_specific_accuracies, "4_step_DTL_specific", 48, args.acc_file)
 
     # plt_accuracies("accuracies_long")
 
 
-    with open("../results/MAC-DT_results.txt", "r") as f:
-        model_name = "4_steps_recall"
-        lines = f.readlines()
-        accuracies = []
-        for line in lines:
-            accuracies.append(float(line.split(" ")[-1]))
-
-    plt.plot(range(2, 48, 2), accuracies, label=model_name, marker='o')
-    plt.axhline(y=0.9766855460381485, color='r', linestyle='--', label='4_steps_MAC')
-
-    plt.xlabel("Inference-Time Iterations")
-    plt.xticks(range(4, 50, 4))
-    plt.ylabel("Accuracy")
-    plt.ylim(0.5, 1)
-    plt.legend(loc='upper right')
-    plt.grid(True)
-    plt.savefig(f'../results/MAC_vs_MACDT.png')
-    plt.show()
+    # with open("../results/MAC-DT_results.txt", "r") as f:
+    #     model_name = "4_steps_recall"
+    #     lines = f.readlines()
+    #     accuracies = []
+    #     for line in lines:
+    #         accuracies.append(float(line.split(" ")[-1]))
+    #
+    # plt.plot(range(2, 48, 2), accuracies, label=model_name, marker='o')
+    # plt.axhline(y=0.9766855460381485, color='r', linestyle='--', label='4_steps_MAC')
+    #
+    # plt.xlabel("Inference-Time Iterations")
+    # plt.xticks(range(4, 50, 4))
+    # plt.ylabel("Accuracy")
+    # plt.ylim(0.5, 1)
+    # plt.legend(loc='upper right')
+    # plt.grid(True)
+    # plt.savefig(f'../results/MAC_vs_MACDT.png')
+    # plt.show()
 
 
 

@@ -39,10 +39,10 @@ class Resnet(nn.Module):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', dest='cfg_file', help='optional config file', default='..\\cfg\\clevr_train_mac.yml', type=str)
-    parser.add_argument('--data_dir', dest='data_dir', type=str, default='D:\\University\\Project\\CLEVR_v1.0')
-    parser.add_argument('--model_path', dest='model_path', type=str, default='..\\log\\model_recall_step_specific.pth')
-    parser.add_argument('--image_file', type=str, help='image file path', default='D:\\University\\Project\\CLEVR_v1.0\\images\\val\\CLEVR_val_000000.png')
-    parser.add_argument('--question', type=str, help='question string', default='What is the material of the big purple object?')
+    parser.add_argument('--data_dir', dest='data_dir', type=str)
+    parser.add_argument('--model_path', dest='model_path', type=str)
+    parser.add_argument('--image_file', type=str, help='image file path')
+    parser.add_argument('--question', type=str, help='question string')
     args = parser.parse_args()
     return args
 
