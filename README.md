@@ -1,7 +1,6 @@
-<<<<<<< HEAD
 # mac
 =======
-# Pytorch implementation of the MAC-Network + Deep Thinking
+# Pytorch implementation of the MAC-Network + Lipschitz Normalised Deep Thinking
 
 Pytorch implementation of the 2018 ICLR Paper [Compositional Attention Networks for Machine Reasoning](https://arxiv.org/abs/1803.03067) (MAC Network), based on [original implementation](https://github.com/stanfordnlp/mac-network), [rosinality](https://github.com/rosinality/mac-network-pytorch) and [tohinz](https://github.com/tohinz/pytorch-mac-network).
 It combines MAC with Lipschitz normalised Deep Thinking architecture [Deep Thinking](http://arxiv.org/abs/2410.23451) that allows model to adjust the number of reasoning steps during inference time. The original MAC-Network is limited to a fixed number of reasoning steps, which is set during training and cannot be changed during inference. 
@@ -44,4 +43,3 @@ but it can adjust the number of reasoning steps during inference time which is i
 
 Performance of the model on the validation set with different number of reasoning steps:
 ![performance](results/org_model_results.png)
->>>>>>> d7bb9ed (Inital commit)
