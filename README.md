@@ -24,7 +24,6 @@ All codes have been updated to match modern Pytorch standards and are compatible
 python code/main.py --cfg cfg/clevr_train_mac.yml --gpu 0
 ```
 - The number of reasoning steps can be changed through the config file (`TRAIN -> MAX_STEPS`) - default value is `4`.
-- Training progress can be visualized via `tensorboard --logdir data/`
 - The basic implementation closely mirrors the parameters and config settings from the original implementation's args.txt, i.e. this line in the original [Git](https://github.com/stanfordnlp/mac-network#model-variants): `python main.py --expName "clevrExperiment" --train --testedNum 10000 --epochs 25 --netLength 4 @configs/args.txt` (we evaluate on the full validation set though)
 
 **To inference**:
@@ -37,9 +36,11 @@ python code/inference.py --cfg cfg/clevr_test_mac.yml --gpu 0 --model_path [path
 python code/validate.py --cfg cfg/clevr_test_mac.yml --gpu 0 --model_path [path to model] --steps [number of reasoning steps]
 ```
 **Results**:
-The main target of this project is to experiment the hybrid architecture of MAC-Network and Deep Thinking. The overall performance are not yet comparable to the original paper,
-but it can adjust the number of reasoning steps during inference time which is impossible in the original MAC network. The Deep Thinking architecture could potentially improve the extrapolation performance.
+The main target of this project is to experiment the hybrid architecture of MAC-Network and Deep Thinking. Primarily focusing on testing extrapolation, stability and training convergence. The overall performance are not yet comparable to the original paper,
+but it can adjust the number of reasoning steps during inference time which is impossible in the original MAC network. Therefore, the Deep Thinking architecture could potentially improve model's reasoning performance.
 
+Another key achievement is the **MAC_DTL_specific** model, which retains step specific layers in the control unit - unlike other conventional Deep Learning architectures.
+Among all DTL models, it demonstrates the best performance and stability during inference. This model effectively combines the advantages of both MAC and DTL architectures, allowing for a more flexible and adaptive reasoning process.
 
 Performance of the model on the validation set with different number of reasoning steps:
 ![performance](results/org_model_results.png)
