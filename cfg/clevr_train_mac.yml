@@ -1,5 +1,5 @@
 GPU_ID: '0'
-WORKERS: 4
+WORKERS: 8
 CUDA: True
 
 TRAIN:
@@ -13,7 +13,7 @@ TRAIN:
     PATIENCE: 5
     CLIP_GRADS: True
     MAX_STEPS: 4
-    STEP_SPECIFIC: False
+    STEP_SPECIFIC: True
 
 DATASET:
     DATA_DIR: '../data'
