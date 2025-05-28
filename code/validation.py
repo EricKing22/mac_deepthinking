@@ -18,7 +18,7 @@ def parse_args():
     parser.add_argument('--set', dest='set', type=str, choices=['org', 'human', 'hard'], default='org')
     parser.add_argument('--steps', dest='steps', type=int, default=4)
 
-    parser.add_argument('--model_path', dest='model_path', type=str, default='..//log//50_epochs_4_steps_DTL_specific//Model//model_checkpoint_000015.pth')
+    parser.add_argument('--model_path', dest='model_path', type=str, default='..//log//50_epochs_4_steps_viva//Model/model_checkpoint_000025.pth')
     parser.add_argument('--manualSeed', type=int, help='manual seed')
     parser.add_argument('--wrongs_answers_path', type=str)
     args = parser.parse_args()
@@ -92,6 +92,22 @@ def validate(model_path, device, set):
 
     return accuracy
 
+def model_graident_norm(model_path):
+    vocab = load_vocab(cfg)
+    model,model_ema = mac_org.load_MAC(cfg, vocab)
+
+    checkpoint = torch.load(model_path, weights_only=True)
+    model.load_state_dict(checkpoint["model"])
+
+    model.eval()  # Make sure you're in eval mode (no dropout, etc.)
+
+    for name, param in model.named_parameters():
+        if "weight" in name and len(param.shape) >= 2:  # Only apply to 2D weights (e.g., Linear, Conv)
+            try:
+                spec_norm = torch.linalg.svdvals(param)[0].item()  # Largest singular value = spectral norm
+                print(f"{name}: Spectral norm = {spec_norm:.4f}")
+            except Exception as e:
+                print(f"Could not compute spectral norm for {name}: {e}")
 
 
 if __name__ == "__main__":

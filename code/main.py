@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, help='batch size')
     parser.add_argument('--epochs', type=int, help='number of epochs',default=50)
     parser.add_argument('--train_steps', type=int, help='number of training steps',default=4)
-    parser.add_argument('--name', type=str, help='name of the training directory',default='50_epochs_4_steps_DTL_specific')
+    parser.add_argument('--name', type=str, help='name of the training directory',default='50_epochs_4_steps_viva')
     args = parser.parse_args()
     return args
 

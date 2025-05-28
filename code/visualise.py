@@ -171,7 +171,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', dest='cfg_file', help='optional config file', default='..\\cfg\\clevr_train_mac.yml', type=str)
     parser.add_argument('--gpu',  dest='gpu', type=str, default='0')
-    parser.add_argument('--set', dest='set', type=str, choices=['org', 'human', 'hard'], default='org')
+    parser.add_argument('--set', dest='set', type=str, choices=['org', 'human', 'hard'], default='human')
     parser.add_argument('--max_steps', dest='max_steps', type=int, default=48)
     parser.add_argument('--img_name', dest='img_name', type=str, default="human_models_results")
     parser.add_argument('--acc_file', dest='acc_file', type=str, default='accuracies_long')

@@ -38,11 +38,12 @@ class Resnet(nn.Module):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', dest='cfg_file', help='optional config file', default='..\\cfg\\clevr_train_mac.yml', type=str)
-    parser.add_argument('--data_dir', dest='data_dir', type=str)
-    parser.add_argument('--model_path', dest='model_path', type=str)
-    parser.add_argument('--image_file', type=str, help='image file path')
-    parser.add_argument('--question', type=str, help='question string')
+    parser.add_argument('--cfg', dest='cfg_file', help='optional config file', default='../cfg/clevr_train_mac.yml', type=str)
+    parser.add_argument('--data_dir', dest='data_dir', type=str, default='D:/University/Project/CLEVR_v1.0/images')
+    parser.add_argument('--model_path', dest='model_path', type=str, default='../log/50_epochs_4_steps_DTL_specific/Model/model_checkpoint_000015.pth')
+    parser.add_argument('--image_file', type=str, help='image file path', default='val/CLEVR_val_000005.png')
+    parser.add_argument('--question', type=str, help='question string', default='How many objects that are yellow and matte and sphere ?')
+    parser.add_argument('--steps', dest='steps', type=int, default=48)
     args = parser.parse_args()
     return args
 
@@ -82,6 +83,8 @@ def inference(image_path, question, device):
 
     cfg_from_file(args.cfg_file)
     cfg.DATA_DIR = args.data_dir
+    cfg.TRAIN.MAX_STEPS = args.steps
+
 
     vocab = load_vocab(cfg)
     model, model_ema = mac.load_MAC(cfg, vocab)
@@ -99,7 +102,7 @@ def inference(image_path, question, device):
     answer = parse_answer(result)
 
     predicts = {k:v for (v,k) in zip(prediction.cpu().squeeze().tolist(), get_answer_dict())}
-    print(predicts)
+    # print(predicts)
 
     return answer
 
@@ -108,7 +111,7 @@ if __name__ == "__main__":
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     args = parse_args()
 
-    image_path = args.image_file
+    image_path = os.path.join(args.data_dir, args.image_file)
     question = args.question
 
     answer = inference(image_path, question, device)
