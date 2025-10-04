@@ -1,14 +1,17 @@
-# mac
+# mac_deepthinking
 =======
 # Pytorch implementation of the MAC-Network + Lipschitz Normalised Deep Thinking
 
-Pytorch implementation of the 2018 ICLR Paper [Compositional Attention Networks for Machine Reasoning](https://arxiv.org/abs/1803.03067) (MAC Network), based on [original implementation](https://github.com/stanfordnlp/mac-network), [rosinality](https://github.com/rosinality/mac-network-pytorch) and [tohinz](https://github.com/tohinz/pytorch-mac-network).
-It combines MAC with Lipschitz normalised Deep Thinking architecture [Deep Thinking](http://arxiv.org/abs/2410.23451) that allows model to adjust the number of reasoning steps during inference time. The original MAC-Network is limited to a fixed number of reasoning steps, which is set during training and cannot be changed during inference. 
-The proposed hybrid architecture is hypothesised to improve the extrapolation performance of the model.
-All codes have been updated to match modern Pytorch standards and are compatible with the latest version of Pytorch (2.8.0).
+Pytorch implementation of an updated version of the 2018 ICLR paper [Compositional Attention Networks for Machine Reasoning (MAC Network)](http://arxiv.org/abs/1803.03067), based on the [original implementation](
+https://github.com/stanfordnlp/mac-network), [rosinality](https://github.com/rosinality/mac-network-pytorch), and [tohinz](https://github.com/tohinz/pytorch-mac-network).
 
+This project combines the MAC Network with a [Lipschitz-normalised Deep Thinking architecture (Deep Thinking)](http://arxiv.org/abs/2410.23451), enabling the model to adjust the number of reasoning steps during inference. In contrast, the original MAC Network is restricted to a fixed number of reasoning steps, determined during training and unchangeable at inference.
 
-**Prepare dataset**:
+The proposed hybrid architecture is hypothesised to improve the model's extrapolation performance and inference stability. All code has been updated to follow modern Pytorch standards and is compatible with the latest version (2.8.0).
+
+***
+
+## **Prepare dataset**:
 - Download and extract [CLEVR v1.0 dataset](http://cs.stanford.edu/people/jcjohns/clevr/)
 - Preprocess question data:  `python preprocess.py [CLEVR directory]`
 - Extract image features with ResNet 101 as described in the original [Git](https://github.com/stanfordnlp/mac-network#feature-extraction)
@@ -19,23 +22,32 @@ All codes have been updated to match modern Pytorch standards and are compatible
     - `data/val.pkl`
     - `data/dic.pkl`
 
-**To train**:
+**Sample from the [CLEVR v1.0 dataset](http://cs.stanford.edu/people/jcjohns/clevr/)**
+
+<img src="CLEVR_train_000000.png" alt="CLEVR example" width="300"/>
+
+**Question**: How many green objects are there?
+
+**Answer**: 1
+
+## **To train**:
 ```
 python code/main.py --cfg cfg/clevr_train_mac.yml --gpu 0
 ```
 - The number of reasoning steps can be changed through the config file (`TRAIN -> MAX_STEPS`) - default value is `4`.
 - The basic implementation closely mirrors the parameters and config settings from the original implementation's args.txt, i.e. this line in the original [Git](https://github.com/stanfordnlp/mac-network#model-variants): `python main.py --expName "clevrExperiment" --train --testedNum 10000 --epochs 25 --netLength 4 @configs/args.txt` (we evaluate on the full validation set though)
 
-**To inference**:
+## **To inference**:
 ```
 python code/inference.py --cfg cfg/clevr_test_mac.yml --gpu 0 --model_path [path to model] --image_file [path to image file] --question [question string]
 ```
 
-**To validate on the validation set**:
+## **To validate on the validation set**:
 ```
 python code/validate.py --cfg cfg/clevr_test_mac.yml --gpu 0 --model_path [path to model] --steps [number of reasoning steps]
 ```
-**Results**:
+
+# **Results**:
 The main target of this project is to experiment the hybrid architecture of MAC-Network and Deep Thinking. Primarily focusing on testing extrapolation, stability and training convergence. The overall performance are not yet comparable to the original paper,
 but it can adjust the number of reasoning steps during inference time which is impossible in the original MAC network. Therefore, the Deep Thinking architecture could potentially improve model's reasoning performance.
 
